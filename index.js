@@ -3,62 +3,42 @@ const express = require('express')
 const axios = require('axios')
 const morgan = require('morgan')
 const cors = require('cors')
-const queryString = require('query-string');
 const Enom = require('node-enom-api');
 const app = express()
 require('dotenv').config()
+const PORT = process.env.PORT || 4000
 
 app.use(morgan('dev'))
 app.use(bodyParser.json())
 app.use(cors())
 
-var client = new Enom({
+const client = new Enom({
     uid: process.env.ENOM_LOGIN,
     pw: process.env.ENOM_PW,
     response: "json",
     mode: "live"
   });
 
-// app.get('/', (req, res) => {
-//     console.log(req.query.url)
-//     if(!req.query.url){
-//         return res.status(400).send('You need to pass params. `example.com/?url=someapi.com`')
-//     }
-//     const params = queryString.parseUrl(decodeURI(req.query.url))
-
-//     console.log(params)
-//     let headers = req.headers
-//     console.log(headers)
-//     return axios.get(params.url, {params:params.query, headers:{'Authorization':headers.authorization}})
-//     .then((response)=>res.send(response))
-//     .catch((response)=>{
-//         // console.log(error.response.data);
-//         // console.log(error.response.status);
-//         // console.log(error.response.headers);
-//         res.status(400).json(response.error)
-//     })
-// })
-
 app.get('/check/:available', (req, res) => {
     let domain = req.params.available
     
-    axios.get(`https://api.godaddy.com/v1/domains/available?domain=${domain}&checkType=FAST&forTransfer=false`,{"headers":
-    {"Accept": "application/json", "Authorization":process.env.GODADDY_OAUTH}})
+    axios.get(`https://api.godaddy.com/v1/domains/available?domain=${domain}&checkType=FAST&forTransfer=false`,
+        {
+        "headers":{
+            "Accept": "application/json",
+            "Authorization":process.env.GODADDY_OAUTH
+            }
+        })
     .then(r => res.send(r.data))
-    .catch((error)=>{
-        console.log(error)
-    })
+    .catch(error => console.log(error))
 })
 
 app.get('/whois/:ns', (req, res) =>{
     let domain = req.params.ns
+
     axios.get(`https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${process.env.WHOIS_KEY}&domainName=${domain}&outputFormat=json`)
-    .then((r)=>{
-        res.send(r.data)
-    })
-    .catch((err)=>{
-        console.log(err)
-    })
+    .then(r => res.send(r.data))
+    .catch(err => console.log(err))
 })
 
 app.get('/godaddy/:domain', (req, res) => {
@@ -99,4 +79,4 @@ app.get('/enom/:domain', (req, res) => {
       })
 })
 
-app.listen(process.env.PORT || 4000, null, () => console.log('Listening on http://localhost:4000'))
+app.listen(PORT, null, () => console.log(`Listening on http://localhost:${PORT}`))
